@@ -104,7 +104,8 @@
       </div>
       <div>
         <label for="websocketInput">WebSocket URL:</label>
-        <input id="websocketInput" type="text" value="ws://localhost:8000/asr" />
+        <!-- The value will be set dynamically -->
+        <input id="websocketInput" type="text" value="" />
       </div>
     </div>
   </div>
@@ -119,7 +120,7 @@
     let websocket = null;
     let recorder = null;
     let chunkDuration = 1000;
-    let websocketUrl = "ws://localhost:8000/asr";
+    let websocketUrl = "";
     let userClosing = false;
 
     const statusText = document.getElementById("status");
@@ -127,6 +128,11 @@
     const chunkSelector = document.getElementById("chunkSelector");
     const websocketInput = document.getElementById("websocketInput");
     const linesTranscriptDiv = document.getElementById("linesTranscript");
+
+    // Dynamically set the default WebSocket URL based on the current host and protocol
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    websocketUrl = `${protocol}//${window.location.host}/asr`;
+    websocketInput.value = websocketUrl;
 
     chunkSelector.addEventListener("change", () => {
       chunkDuration = parseInt(chunkSelector.value);
@@ -193,13 +199,10 @@
     }
 
     function renderLinesWithBuffer(lines, buffer) {
-      // Clears if no lines
       if (!Array.isArray(lines) || lines.length === 0) {
         linesTranscriptDiv.innerHTML = "";
         return;
       }
-      // Build the HTML
-      // The buffer is appended to the last line if it's non-empty
       const linesHtml = lines.map((item, idx) => {
         let textContent = item.text;
         if (idx === lines.length - 1 && buffer) {
@@ -207,7 +210,6 @@
         }
         return `<p><strong>Speaker ${item.speaker}:</strong> ${textContent}</p>`;
       }).join("");
-
       linesTranscriptDiv.innerHTML = linesHtml;
     }
 
@@ -235,12 +237,10 @@
         recorder = null;
       }
       isRecording = false;
-
       if (websocket) {
         websocket.close();
         websocket = null;
       }
-
       updateUI();
     }
 
